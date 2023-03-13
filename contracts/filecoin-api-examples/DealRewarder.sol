@@ -31,6 +31,12 @@ contract DealRewarder {
         owner = msg.sender;
     }
 
+    event Log(
+        string text,
+        uint size,
+        bool trueOrFalse
+    );
+
     function fund(uint64 unused) public payable {}
 
     function addCID(bytes calldata cidraw, uint size) public {
@@ -45,16 +51,22 @@ contract DealRewarder {
     }
 
     function authorizeData(bytes memory cidraw, uint64 provider, uint size) public {
+        emit Log("cidSet[cidraw]: ", 0, cidSet[cidraw]);
         require(cidSet[cidraw], "cid must be added before authorizing");
+        emit Log("cidSizes[cidraw]: ", cidSizes[cidraw], true);
         require(cidSizes[cidraw] == size, "data size must match expected");
+        emit Log("policyOK(cidraw, provider): ", 0, policyOK(cidraw, provider));
         require(policyOK(cidraw, provider), "deal failed policy check: has provider already claimed this cid?");
 
         cidProviders[cidraw][provider] = true;
     }
     type FilActorId is uint64;
     function claim_bounty(uint64 deal_id) public {
+        emit Log("Entering claim bounty...", 0, true);
         MarketTypes.GetDealDataCommitmentReturn memory commitmentRet = MarketAPI.getDealDataCommitment(deal_id);
+        emit Log("Past getDealDataCommitment", 0, true);
         uint64 providerRet = MarketAPI.getDealProvider(deal_id);
+        emit Log("Past getDealProvider", 0, true);
 
         authorizeData(commitmentRet.data, providerRet, commitmentRet.size);
         
